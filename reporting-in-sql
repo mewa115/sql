@@ -25,3 +25,74 @@ ON w.country_id = c.id
 GROUP BY country, season
 -- Sort the results to show most events at the top
 ORDER BY events;
+
+
+--In the subquery, construct a query that outputs season, country_id and event by combining summer and winter games with a UNION ALL.
+--Leverage a JOIN and another SELECT statement to show the fields season, country and unique events.
+--GROUP BY any unaggregated fields.
+--Sort the report by events in descending order.
+
+
+-- Add outer layer to pull season, country and unique events
+SELECT 
+	season, 
+    country, 
+    count(distinct event) AS events
+FROM
+    -- Pull season, country_id, and event for both seasons
+    (SELECT 
+     	'summer' AS season, 
+     	country_id, 
+     	event
+    FROM summer_games
+    UNION
+    SELECT 
+        'winter' AS season, 
+     	country_id, 
+     	event
+    FROM winter_games) AS subquery
+JOIN countries AS c
+ON subquery.country_id = c.id
+-- Group by any unaggregated fields
+GROUP BY season, country
+-- Order to show most events at the top
+ORDER BY events desc;
+
+
+--Update the CASE statement to output three values: Tall Female, Tall Male, and Other.
+SELECT 
+	name,
+    -- Output 'Tall Female', 'Tall Male', or 'Other'
+	CASE 
+    when gender = 'F' and height >= 175 then 'Tall Female'
+    when gender = 'M' and height >= 190 then 'Tall Male'
+    else 'Other'
+    END AS segment
+FROM athletes;
+
+
+--Build a query that pulls from summer_games and athletes to show sport, bmi_bucket, and athletes.
+--Without using AND or ELSE, set up a CASE statement that splits bmi_bucket into three groups: '<.25', '.25-.30', and '>.30'.
+--Group by the non-aggregated fields.
+--Order the report by sport and then athletes in descending order.
+-- Pull in sport, bmi_bucket, and athletes
+-- Pull in sport, bmi_bucket, and athletes
+SELECT 
+	sport,
+    -- Bucket BMI in three groups: <.25, .25-.30, and >.30	
+    CASE 
+    WHEN (100 * weight / (height^2)) < 0.25 THEN '<.25'
+    WHEN (100 * weight / (height^2)) >= 0.25 and (100 * weight / (height^2)) < 0.3 THEN '.25-.30'
+    WHEN (100 * weight / (height^2)) >= 0.3 THEN '>.30' 
+    END AS bmi_bucket,
+    count(distinct athlete_id) AS athletes
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+-- GROUP BY non-aggregated fields
+GROUP BY sport, bmi_bucket
+-- Sort by sport and then by athletes in descending order
+ORDER BY athletes, sport asc;
+
+
+
