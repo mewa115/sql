@@ -1,0 +1,27 @@
+--Setup a query that shows unique events by country and season for summer events.
+--Setup a similar query that shows unique events by country and season for winter events.
+--Combine the two queries using a UNION ALL.
+--Sort the report by events in descending order.
+
+-- Query season, country, and events for all summer events
+SELECT 
+	'summer' AS season, 
+    country, 
+    event AS events
+FROM summer_games AS s
+JOIN countries AS c
+ON s.country_id = c.id
+GROUP BY country, event
+-- Combine the queries
+UNION
+-- Query season, country, and events for all winter events
+SELECT 
+	'winter' AS season, 
+    country, 
+    event AS events
+FROM winter_games AS w
+JOIN countries AS c
+ON w.country_id = c.id
+GROUP BY country, event
+-- Sort the results to show most events at the top
+ORDER BY season;
