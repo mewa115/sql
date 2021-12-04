@@ -242,5 +242,315 @@ GROUP BY sport, bmi_bucket
 ORDER BY athletes, sport asc;
 
 
+-- Comment out the troubleshooting query
+SELECT 
+	height, 
+    weight, 
+    weight/height^2*100 AS bmi
+FROM athletes
+WHERE weight/height^2*100 IS NULL;
 
 
+-- Comment out the troubleshooting query
+SELECT 
+	sport,
+    CASE WHEN weight/height^2*100 <.25 THEN '<.25'
+    WHEN weight/height^2*100 <=.30 THEN '.25-.30'
+    WHEN weight/height^2*100 >.30 THEN '>.30'
+    WHEN weight/height^2*100 is null THEN 'no weight recorded'
+    -- Add ELSE statement to output 'no weight recorded'
+    END AS bmi_bucket,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+GROUP BY sport, bmi_bucket
+ORDER BY sport, athletes DESC;
+
+
+-- Pull summer bronze_medals, silver_medals, and gold_medals
+SELECT 
+	count(bronze) as bronze_medals, 
+    count(silver) as silver_medals, 
+    count(gold) as gold_medals
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+-- Filter for athletes age 16 or below
+WHERE a.age <= 16;
+
+
+
+-- Pull summer bronze_medals, silver_medals, and gold_medals
+SELECT 
+	count(bronze) as bronze_medals, 
+    count(silver) as silver_medals, 
+    count(gold) as gold_medals
+FROM summer_games
+-- Add the WHERE statement below
+WHERE athlete_id IN
+    -- Create subquery list for athlete_ids age 16 or below    
+    (SELECT id
+     FROM athletes
+     WHERE age <=16);
+     
+     
+     
+-- Pull event and unique athletes from summer_games 
+SELECT 
+	event, 
+    -- Add the gender field below
+    CASE
+    when event like '%Women%' then 'female'
+    ELSE 'male'
+    END AS gender,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games
+GROUP BY event;
+
+
+
+-- Pull event and unique athletes from summer_games 
+SELECT 
+    event,
+    -- Add the gender field below
+    CASE WHEN event LIKE '%Women%' THEN 'female' 
+    ELSE 'male' END AS gender,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games
+-- Only include countries that won a nobel prize
+WHERE country_id IN 
+	(SELECT country_id
+    FROM country_stats
+    WHERE nobel_prize_winners !=0)
+GROUP BY event;	
+
+
+
+-- Pull event and unique athletes from summer_games 
+SELECT 
+    event,
+    -- Add the gender field below
+    CASE WHEN event LIKE '%Women%' THEN 'female' 
+    ELSE 'male' END AS gender,
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games
+-- Only include countries that won a nobel prize
+WHERE country_id IN 
+	(SELECT country_id 
+    FROM country_stats 
+    WHERE nobel_prize_winners > 0)
+GROUP BY event
+-- Add the second query below and combine with a UNION
+UNION
+SELECT 
+	event,
+    CASE WHEN event LIKE '%Women%' THEN 'female' 
+	ELSE 'male' END AS gender,
+	COUNT(DISTINCT athlete_id) AS athletes
+FROM winter_games
+WHERE country_id IN 
+	(SELECT country_id 
+    FROM country_stats 
+    WHERE nobel_prize_winners > 0)
+GROUP BY event
+-- Order and limit the final output
+ORDER BY athletes desc 
+
+
+
+-- Pull column_name & data_type from the columns table
+SELECT 
+	column_name,
+    data_type
+FROM INFORMATION_SCHEMA.COLUMNS
+-- Filter for the table 'country_stats'
+WHERE table_name = 'country_stats';
+
+
+-- Run the query, then convert a data type to fix the error
+SELECT AVG(pop_in_millions::float) AS avg_population
+FROM country_stats;
+
+
+-- Comment out the previous query
+/*SELECT AVG(CAST(pop_in_millions AS float)) AS avg_population
+FROM country_stats;*/
+
+-- Uncomment the following block & run the query
+SELECT 
+	s.country_id, 
+    COUNT(DISTINCT s.athlete_id) AS summer_athletes, 
+    COUNT(DISTINCT w.athlete_id) AS winter_athletes
+FROM summer_games AS s
+JOIN winter_games_str AS w
+-- Fix the error by making both columns integers
+ON cast(s.country_id as int) = cast(w.country_id as int)
+GROUP BY s.country_id;
+LIMIT 10;
+
+
+SELECT 
+	year,
+    -- Pull decade, decade_truncate, and the world's gdp
+    DATE_PART('decade', cast(year as date)) AS decade,
+    DATE_TRUNC('decade', cast(year as date)) AS decade_truncated,
+    sum(gdp) AS world_gdp
+FROM country_stats
+-- Group and order by year in descending order
+GROUP BY year 
+ORDER BY year desc;
+
+
+
+-- Convert country to lower case
+SELECT 
+	country, 
+    LOWER(country) AS country_altered
+FROM countries
+GROUP BY country;
+
+
+-- Convert country to proper case
+SELECT 
+	country, 
+    INITCAP(country) AS country_altered
+FROM countries
+GROUP BY country;
+
+
+-- Output the left 3 characters of country
+SELECT 
+	country, 
+    left(country, 3) AS country_altered
+FROM countries
+GROUP BY country;
+
+
+-- Output all characters starting with position 7
+SELECT 
+	country, 
+    SUBSTRING(country,7) AS country_altered
+FROM countries
+GROUP BY country;
+
+
+
+SELECT 
+	region, 
+    -- Replace all '&' characters with the string 'and'
+    REPLACE(region,'&','and') AS character_swap,
+    -- Remove all periods
+    REPLACE(region,'.','') AS character_remove,
+    -- Combine the functions to run both changes at once
+    REPLACE(replace(region,'.',''),'&','and') AS character_swap_and_remove
+FROM countries
+WHERE region = 'LATIN AMER. & CARIB'
+GROUP BY region;
+
+
+-- Pull event and unique athletes from summer_games_messy 
+SELECT 
+	event, 
+    count(distinct athlete_id) AS athletes
+FROM summer_games_messy
+-- Group by the non-aggregated field
+GROUP BY event;
+
+
+-- Pull event and unique athletes from summer_games_messy 
+SELECT 
+    -- Remove dashes from all event values
+    replace(TRIM(event), '-', '') AS event_fixed, 
+    COUNT(DISTINCT athlete_id) AS athletes
+FROM summer_games_messy
+-- Update the group by accordingly
+GROUP BY event_fixed;
+
+
+--Filtering out nulls
+--One way to deal with nulls is to simply filter them out. There are two important conditionals related to nulls:
+--IS NULL is true for any value that is null.
+--IS NOT NULL is true for any value that is not null. Note that a zero or a blank cell is not the same as a null.
+--These conditionals can be leveraged by several clauses, such as CASE statements, WHERE statements, and HAVING statements. In this exercise, you will learn how to filter out nulls using two separate techniques.
+--Feel free to reference the E:R Diagram.
+-- Show total gold_medals by country
+SELECT 
+	country,
+    sum(gold) AS gold_medals
+FROM winter_games AS w
+JOIN countries AS c
+ON w.country_id = c.id
+GROUP BY country
+-- Order by gold_medals in descending order
+ORDER BY gold_medals;
+
+
+-- Show total gold_medals by country
+SELECT 
+	country, 
+    SUM(gold) AS gold_medals
+FROM winter_games AS w
+JOIN countries AS c
+ON w.country_id = c.id
+-- Removes any row with no gold medals
+WHERE gold is not null
+GROUP BY country
+-- Order by gold_medals in descending order
+ORDER BY gold_medals DESC;
+
+
+
+-- Show total gold_medals by country
+SELECT 
+	country, 
+    SUM(gold) AS gold_medals
+FROM winter_games AS w
+JOIN countries AS c
+ON w.country_id = c.id
+-- Comment out the WHERE statement
+WHERE gold IS NOT NULL
+GROUP BY country
+-- Replace WHERE statement with equivalent HAVING statement
+HAVING SUM(gold) > 0
+-- Order by gold_medals in descending order
+ORDER BY gold_medals DESC;
+
+
+
+
+-- Pull events and golds by athlete_id for summer events
+SELECT 
+    athlete_id,
+    count(distinct event) AS total_events, 
+    sum(gold) AS gold_medals
+FROM summer_games
+GROUP BY athlete_id
+-- Order by total_events descending and athlete_id ascending
+ORDER BY total_events desc, athlete_id asc;
+
+
+-- Pull events and golds by athlete_id for summer events
+SELECT 
+    athlete_id, 
+    -- Add a field that averages the existing gold field
+    avg(gold) AS avg_golds,
+    COUNT(event) AS total_events, 
+    SUM(gold) AS gold_medals
+FROM summer_games
+GROUP BY athlete_id
+-- Order by total_events descending and athlete_id ascending
+ORDER BY total_events DESC, athlete_id;
+
+
+-- Pull events and golds by athlete_id for summer events
+SELECT 
+    athlete_id, 
+    -- Replace all null gold values with 0
+    AVG(COALESCE(gold, 0)) AS avg_golds,
+    COUNT(event) AS total_events, 
+    SUM(gold) AS gold_medals
+FROM summer_games
+GROUP BY athlete_id
+-- Order by total_events descending and athlete_id ascending
+ORDER BY total_events DESC, athlete_id;
