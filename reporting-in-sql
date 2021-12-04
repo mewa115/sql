@@ -107,4 +107,140 @@ FROM summer_games
 GROUP BY sport;
 
 
+--In the previous exercise, you identified which tables are needed to create a report that shows Age of Oldest Athlete by Region. 
+-- Now, set up the query to create this report.
+-- Select the age of the oldest athlete for each region
+SELECT 
+	region, 
+    max(a.age) AS age_of_oldest_athlete
+FROM athletes as a
+-- First JOIN statement
+JOIN summer_games as b
+on a.id = b.athlete_id
+-- Second JOIN statement
+JOIN countries as c
+on b.country_id = c.id
+GROUP BY region;
+
+
+-- The full E:R diagram for the database is shown below:
+-- Since the company will be involved in both summer sports and winter sports, it is beneficial to look at all sports in one centralized report.
+-- Your task is to create a query that shows the unique number of events held for each sport. Note that since no relationships exist between these two tables, you will need to use a UNION instead of a JOIN.
+-- Select sport and events for summer sports
+SELECT 
+	sport, 
+    count(distinct event) AS events
+FROM summer_games
+group by sport
+UNION
+
+
+SELECT 
+	sport, 
+    count(distinct event) AS events
+FROM winter_games
+group by sport
+-- Show the most events at the top of the report
+order by events desc;
+
+
+
+-- Add the rows column to your query
+SELECT 
+	bronze, 
+	count(*) AS rows
+FROM summer_games
+GROUP BY bronze;
+
+
+-- The same techniques we use to explore the data can be used to validate queries. By using the query as a subquery, you can run exploratory techniques to confirm the query results are as expected.
+-- In this exercise, you will create a query that shows Bronze Medals by Country and then validate it using the subquery technique.
+-- Feel free to reference the E:R Diagram as needed.
+-- Pull total_bronze_medals from summer_games below
+
+SELECT sum(bronze) AS total_bronze_medals
+FROM summer_games;
+
+
+
+/* Pull total_bronze_medals from summer_games below
+SELECT SUM(bronze) AS total_bronze_medals
+FROM summer_games; 
+>> OUTPUT = 141 total_bronze_medals */
+
+
+
+-- Setup a query that shows bronze_medal by country
+SELECT 
+	c.country, 
+    sum(bronze) AS bronze_medals
+FROM summer_games AS s
+JOIN countries AS c
+ON s.country_id = c.id
+GROUP BY c.country;
+
+
+
+
+/* Pull total_bronze_medals below
+SELECT SUM(bronze) AS total_bronze_medals
+FROM summer_games; 
+>> OUTPUT = 141 total_bronze_medals */
+
+-- Select the total bronze_medals from your query
+SELECT sum(a.bronze_medals)
+FROM 
+-- Previous query is shown below.  Alias this AS subquery
+(SELECT 
+      country, 
+      SUM(bronze) AS bronze_medals
+  FROM summer_games AS s
+  JOIN countries AS c
+  ON s.country_id = c.id
+  GROUP BY country) a 
+;
+
+
+-- Report 1: Most decorated summer athletes
+-- Now that you have a good understanding of the data, let's get back to our case study and build out the first element for the dashboard, Most Decorated Summer Athletes:
+-- Your job is to create the base report for this element. Base report details:
+-- Column 1 should be athlete_name.
+-- Column 2 should be gold_medals.
+-- The report should only include athletes with at least 3 medals.
+-- The report should be ordered by gold medals won, with the most medals at the top.
+
+-- Pull athlete_name and gold_medals for summer games
+SELECT 
+	a.name AS athlete_name, 
+    sum(s.gold) AS gold_medals
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+GROUP BY a.name
+-- Filter for only athletes with 3 gold medals or more
+having sum(s.gold) > 2
+-- Sort to show the most gold medals at the top
+ORDER BY gold_medals desc;
+
+
+-- Pull in sport, bmi_bucket, and athletes
+SELECT 
+	sport,
+    -- Bucket BMI in three groups: <.25, .25-.30, and >.30	
+    CASE 
+    WHEN (100 * weight / (height^2)) < 0.25 THEN '<.25'
+    WHEN (100 * weight / (height^2)) >= 0.25 and (100 * weight / (height^2)) < 0.3 THEN '.25-.30'
+    WHEN (100 * weight / (height^2)) >= 0.3 THEN '>.30' 
+    END AS bmi_bucket,
+    count(distinct athlete_id) AS athletes
+FROM summer_games AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+-- GROUP BY non-aggregated fields
+GROUP BY sport, bmi_bucket
+-- Sort by sport and then by athletes in descending order
+ORDER BY athletes, sport asc;
+
+
+
 
