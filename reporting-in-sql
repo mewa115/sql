@@ -96,3 +96,15 @@ ORDER BY athletes, sport asc;
 
 
 
+-- Now consider the following visualization:
+-- Using the summer_games table, run a query that creates the base report that sources this visualization.
+-- Query sport, events, and athletes from summer_games
+SELECT 
+	sport, 
+    count(distinct event) AS events, 
+    count(distinct athlete_id) AS athletes
+FROM summer_games
+GROUP BY sport;
+
+
+
