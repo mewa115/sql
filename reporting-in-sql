@@ -723,6 +723,8 @@ GROUP BY region
 ORDER BY avg_total_golds desc;
 
 
+
+
 SELECT 
 	-- Query region, athlete_name, and total gold medals
 	region, 
@@ -736,3 +738,27 @@ ON s.athlete_id = a.id
 JOIN countries AS c
 ON s.country_id = c.id
 GROUP BY region, a.name;
+
+
+-- Query region, athlete name, and total_golds
+SELECT 
+	region,
+    athlete_name,
+    total_golds
+FROM
+    (SELECT 
+		-- Query region, athlete_name, and total gold medals
+        region, 
+        a.name AS athlete_name, 
+        SUM(gold) AS total_golds,
+        -- Assign a regional rank to each athlete
+        ROW_NUMBER() OVER (PARTITION BY region ORDER BY SUM(gold) DESC) AS row_num
+    FROM summer_games_clean AS s
+    JOIN athletes AS a
+    ON a.id = s.athlete_id
+    JOIN countries AS c
+    ON s.country_id = c.id
+    -- Alias as subquery
+    GROUP BY region, athlete_name) AS a
+-- Filter for only the top athlete per region
+WHERE row_num = 1;
