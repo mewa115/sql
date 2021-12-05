@@ -1067,3 +1067,63 @@ ON w.athlete_id = a.id
 GROUP BY country_id, height
 -- Order by country_id and then height in descending order
 ORDER BY country_id, height DESC;
+
+
+
+SELECT
+	-- Pull in region and calculate avg tallest height
+	region
+    ,avg(subquery.height) AS avg_tallest
+FROM countries AS c
+inner join
+    (SELECT 
+   	    -- Pull in country_id and height
+        country_id, 
+        height, 
+        -- Number the height of each country's athletes
+        ROW_NUMBER() OVER (PARTITION BY country_id ORDER BY height DESC) AS row_num
+    FROM winter_games AS w 
+    JOIN athletes AS a 
+    ON w.athlete_id = a.id
+    GROUP BY country_id, height
+    -- Alias as subquery
+    ORDER BY country_id, height DESC) AS subquery
+ON c.id = subquery.country_id
+-- Only include the tallest height for each country
+where row_num = 1 
+GROUP BY region;
+
+
+
+select 
+region, 
+avg_tallest,
+perc_world_gdp/sum(perc_world_gdp) over() as perc_world_gdp
+from (SELECT
+	-- Pull in region and calculate avg tallest height
+    region,
+    AVG(height) AS avg_tallest
+    -- Calculate region's percent of world gdp
+    ,sum(gdp) AS perc_world_gdp  
+FROM countries AS c
+JOIN
+    (SELECT 
+     	-- Pull in country_id and height
+        country_id, 
+        height, 
+        -- Number the height of each country's athletes
+        ROW_NUMBER() OVER (PARTITION BY country_id ORDER BY height DESC) AS row_num
+    FROM winter_games AS w 
+    JOIN athletes AS a ON w.athlete_id = a.id
+    GROUP BY country_id, height
+    -- Alias as subquery
+    ORDER BY country_id, height DESC) AS subquery
+ON c.id = subquery.country_id
+-- Join to country_stats
+JOIN country_stats AS cs
+ON c.id = cs.country_id
+-- Only include the tallest height for each country
+WHERE row_num = 1
+GROUP BY region) q
+group by region, perc_world_gdp, avg_tallest
+
