@@ -681,3 +681,58 @@ LIMIT 25;
 
 
 
+SELECT 
+	country_id,
+    year,
+    gdp,
+    -- Show the average gdp across all years per country
+	avg(gdp) over (partition by country_id)  AS country_avg_gdp
+FROM country_stats;
+
+
+
+SELECT 
+	country_id,
+    year,
+    gdp, 
+    -- Show max gdp for the table and alias accordingly
+	MAX(gdp) over() AS global_max_gdp
+FROM country_stats
+group by country_id, year, gdp;
+
+
+
+
+
+-- Pull in avg_total_golds by region
+SELECT 
+	region,
+  avg(total_golds) AS avg_total_golds
+FROM
+  (SELECT 
+      region, 
+      country_id, 
+      SUM(gold) AS total_golds
+  FROM summer_games_clean AS s
+  JOIN countries AS c
+  ON s.country_id = c.id
+  -- Alias the subquery
+  GROUP BY region, country_id) AS a
+GROUP BY region
+-- Order by avg_total_golds in descending order
+ORDER BY avg_total_golds desc;
+
+
+SELECT 
+	-- Query region, athlete_name, and total gold medals
+	region, 
+    name AS athlete_name, 
+    sum(gold) AS total_golds,
+    -- Assign a regional rank to each athlete
+    ROW_NUMBER() over(partition by region) AS row_num
+FROM summer_games_clean AS s
+JOIN athletes AS a
+ON s.athlete_id = a.id
+JOIN countries AS c
+ON s.country_id = c.id
+GROUP BY region, a.name;
