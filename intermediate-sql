@@ -143,8 +143,8 @@ WHERE
                     
 SELECT 
 	-- Select the stage and average goals from s
-	stage,
-    ROUND(avg_goals, 2) AS avg_goal,
+	s.stage,
+    ROUND(s.avg_goals, 2) AS avg_goal,
     -- Select the overall average for 2012/2013
     (select avg(home_goal + away_goal) from match WHERE season = '2012/2013') AS overall_avg
 FROM 
@@ -157,5 +157,7 @@ FROM
 	 GROUP BY stage) AS s
 WHERE 
 	-- Filter the main query using the subquery
-	s.avg_goals > (SELECT (home_goal + away_goal) 
+	s.avg_goals > (SELECT avg(home_goal + away_goal) 
                     FROM match WHERE season = '2012/2013');
+
+
