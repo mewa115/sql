@@ -405,3 +405,125 @@ SELECT
      home_goal,
      away_goal
 FROM match AS m;
+
+
+
+SELECT 
+	-- Select match id and team long name
+    m.id, 
+    t.team_long_name AS hometeam
+FROM match AS m
+-- Join team to match using team_api_id and hometeam_id
+LEFT JOIN team AS t 
+ON m.hometeam_id = t.team_api_id;
+
+
+
+Get team names with CTEs
+You've now explored two methods for answering the question, How do you get both the home and away team names into one final query result?
+Let's explore the final method - common table expressions.
+Common table expressions are similar to the subquery method for generating results, mainly differing in syntax and the order in which information is processed.
+
+-- Declare the home CTE
+with home as (
+	SELECT m.id, t.team_long_name AS hometeam
+	FROM match AS m
+	LEFT JOIN team AS t 
+	ON m.hometeam_id = t.team_api_id)
+-- Select everything from home
+SELECT *
+FROM home;
+
+
+
+WITH home AS (
+  SELECT m.id, m.date, 
+  		 t.team_long_name AS hometeam, m.home_goal
+  FROM match AS m
+  LEFT JOIN team AS t 
+  ON m.hometeam_id = t.team_api_id),
+-- Declare and set up the away CTE
+away as (
+  SELECT m.id, m.date, 
+  		 t.team_long_name AS awayteam, m.away_goal
+  FROM match AS m
+  LEFT JOIN team AS t 
+  ON m.awayteam_id = t.team_api_id)
+-- Select date, home_goal, and away_goal
+
+SELECT 
+	home.date,
+    home.hometeam,
+    away.awayteam,
+    home.home_goal,
+    away.away_goal
+-- Join away and home on the id column
+FROM home
+INNER JOIN away
+ON home.id = away.id;
+
+
+
+The match is OVER
+The OVER() clause allows you to pass an aggregate function down a data set, similar to subqueries in SELECT. 
+The OVER() clause offers significant benefits over subqueries in select -- namely, your queries will run faster,
+and the OVER() clause has a wide range of additional functions and clauses you can include with it that we will cover later on in this chapter.
+In this exercise, you will revise some queries from previous chapters using the OVER() clause.
+Select the match ID, country name, season, home, and away goals from the match and country tables.
+Complete the query that calculates the average number of goals scored overall and then includes the aggregate value in each row using a window function.
+
+
+
+
+SELECT 
+	-- Select the id, country name, season, home, and away goals
+	m.id, 
+    c.name AS country, 
+    m.season,
+	m.home_goal,
+	m.away_goal,
+    -- Use a window to include the aggregate average in each row
+	avg (m.home_goal + m.away_goal) over() AS overall_avg
+FROM match AS m
+LEFT JOIN country AS c ON m.country_id = c.id;
+
+
+
+
+
+What's OVER here? Window functions allow you to create a RANK of information according to any variable you want to use to sort your data. 
+When setting this up, you will need to specify what column/calculation you want to use to calculate your rank. 
+This is done by including an ORDER BY clause inside the OVER() clause. Below is an example:
+
+
+SELECT 
+    id,
+    RANK() OVER(ORDER BY home_goal) AS rank
+FROM match;
+In this exercise, you will create a data set of ranked matches according to which leagues, on average, score the most goals in a match.
+
+
+Select the league name and average total goals scored from league and match.
+Complete the window function so it calculates the rank of average goals scored across all leagues in the database.
+Order the rank by the average total of home and away goals scored.
+
+SELECT 
+	-- Select the league name and average goals scored
+	l.name AS league,
+    avg(m.home_goal + m.away_goal) AS avg_goals,
+    -- Rank each league according to the average goals
+    rank() OVER(order by AVG(m.home_goal + m.away_goal)) AS league_rank
+FROM league AS l
+LEFT JOIN match AS m 
+ON l.id = m.country_id
+WHERE m.season = '2011/2012'
+GROUP BY l.name
+-- Order the query by the rank you created
+ORDER BY league_rank;
+
+
+
+
+
+
+
