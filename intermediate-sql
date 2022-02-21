@@ -523,7 +523,83 @@ ORDER BY league_rank;
 
 
 
+The PARTITION BY clause allows you to calculate separate "windows" based on columns you want to divide your results. 
+For example, you can create a single column that calculates an overall average of goals scored for each season.
+In this exercise, you will be creating a data set of games played by Legia Warszawa (Warsaw League),
+the top ranked team in Poland, and comparing their individual game performance to the overall average for that season.
+
+Where do you see more outliers? Are they Legia Warszawa's home or away games?
+Complete the two window functions that calculate the home and away goal averages. 
+Partition the window functions by season to calculate separate averages for each season.
+Filter the query to only include matches played by Legia Warszawa, id = 8673.
+
+
+
+SELECT
+	date,
+	season,
+	home_goal,
+	away_goal,
+	CASE WHEN hometeam_id = 8673 THEN 'home' 
+		 ELSE 'away' END AS warsaw_location,
+    -- Calculate the average goals scored partitioned by season
+    avg(home_goal) over(partition by season) AS season_homeavg,
+    avg(away_goal) over(partition by season) AS season_awayavg
+FROM match
+-- Filter the data set for Legia Warszawa matches only
+WHERE 
+	hometeam_id = 8673 
+    OR awayteam_id = 8673
+ORDER BY (home_goal + away_goal) DESC;
 
 
 
 
+
+SELECT 
+	date,
+	season,
+	home_goal,
+	away_goal,
+	CASE WHEN hometeam_id = 8673 THEN 'home' 
+         ELSE 'away' END AS warsaw_location,
+	-- Calculate average goals partitioned by season and month
+	AVG(home_goal) OVER(PARTITION BY season, 
+         	EXTRACT(MONTH FROM date)) AS season_mo_home,
+    AVG(away_goal) OVER(PARTITION BY season, 
+            EXTRACT(MONTH FROM date)) AS season_mo_away
+FROM match
+WHERE 
+	hometeam_id = 8673
+    OR awayteam_id = 8673
+ORDER BY (home_goal + away_goal) DESC;
+
+
+
+
+Slide to the left
+Sliding windows allow you to create running calculations between any two points in a window using functions such as PRECEDING, FOLLOWING, and CURRENT ROW. 
+You can calculate running counts, sums, averages, and other aggregate functions between any two points you specify in the data set.
+
+In this exercise, you will expand on the examples discussed in the video, calculating the running total of goals scored by the FC Utrecht 
+when they were the home team during the 2011/2012 season. Do they score more goals at the end of the season as the home or away team?
+
+Complete the window function by:
+Assessing the running total of home goals scored by FC Utrecht.
+Assessing the running average of home goals scored.
+Ordering both the running average and running total by date.
+
+
+SELECT 
+	date,
+	home_goal,
+	away_goal,
+    -- Create a running total and running average of home goals
+    sum(home_goal) over(ORDER BY date 
+         ROWS BETWEEN UNBOUNDED  preceding AND current row) AS running_total,
+    avg(home_goal) over(ORDER BY date 
+         ROWS BETWEEN UNBOUNDED  preceding AND current row ) AS running_avg
+FROM match
+WHERE 
+	hometeam_id = 9908 
+	AND season = '2011/2012';
