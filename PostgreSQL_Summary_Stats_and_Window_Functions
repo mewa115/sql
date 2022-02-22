@@ -125,3 +125,59 @@ ORDER BY Year ASC;
 
 
 
+Reigning champions by gender
+You've already fetched the previous year's champion for one event. 
+However, if you have multiple events, genders, or other metrics as columns, 
+you'll need to split your table into partitions to avoid having a champion from one event or gender appear as the previous champion of another event or gender.
+Return the previous champions of each year's event by gender.
+
+WITH Tennis_Gold AS (
+  SELECT DISTINCT
+    Gender, Year, Country
+  FROM Summer_Medals
+  WHERE
+    Year >= 2000 AND
+    Event = 'Javelin Throw' AND
+    Medal = 'Gold')
+
+SELECT
+  Gender, Year,
+  Country AS Champion,
+  -- Fetch the previous year's champion by gender
+  lag(Country) OVER (Partition by gender
+            ORDER BY YEAR ASC) AS Last_Champion
+FROM Tennis_Gold
+ORDER BY Gender ASC, Year ASC;
+
+
+Reigning champions by gender and event
+In the previous exercise, you partitioned by gender to ensure that data about one gender doesn't get mixed into data about the other gender. 
+If you have multiple columns, however, partitioning by only one of them will still mix the results of the other columns.
+Return the previous champions of each year's events by gender and event.
+
+WITH Athletics_Gold AS (
+  SELECT DISTINCT
+    Gender, Year, Event, Country
+  FROM Summer_Medals
+  WHERE
+    Year >= 2000 AND
+    Discipline = 'Athletics' AND
+    Event IN ('100M', '10000M') AND
+    Medal = 'Gold')
+
+SELECT
+  Gender, Year, Event,
+  Country AS Champion,
+  -- Fetch the previous year's champion by gender and event
+  lag(Country) OVER (partition by gender, event
+            ORDER BY Year ASC) AS Last_Champion
+FROM Athletics_Gold
+ORDER BY Event ASC, Gender ASC, Year ASC;
+
+
+Future gold medalists
+Fetching functions allow you to get values from different parts of the table into one row.
+If you have time-ordered data, you can "peek into the future" with the LEAD fetching function. 
+This is especially useful if you want to compare a current value to a future value.
+For each year, fetch the current gold medalist and the gold medalist 3 competitions ahead of the current row.
+
