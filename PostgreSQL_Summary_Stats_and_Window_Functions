@@ -42,3 +42,86 @@ FROM (
   FROM Summer_Medals
 ) AS Years
 ORDER BY Year;
+
+
+Numbering Olympic athletes by medals earned
+Row numbering can also be used for ranking. 
+For example, numbering rows and ordering by the count of medals each athlete earned in the OVER clause will assign 1 to the highest-earning medalist, 
+2 to the second highest-earning medalist, and so on.
+
+SELECT
+  -- Count the number of medals each athlete has earned
+  athlete,
+  count(*) AS Medals
+FROM Summer_Medals
+GROUP BY Athlete
+ORDER BY Medals DESC;
+
+
+
+Numbering Olympic athletes by medals earned
+Row numbering can also be used for ranking. 
+For example, numbering rows and ordering by the count of medals each athlete earned in the OVER clause will assign 1 to the highest-earning medalist, 
+2 to the second highest-earning medalist, and so on.
+
+WITH Athlete_Medals AS (
+  SELECT
+    -- Count the number of medals each athlete has earned
+    Athlete,
+    COUNT(*) AS Medals
+  FROM Summer_Medals
+  GROUP BY Athlete)
+
+SELECT
+  -- Number each athlete by how many medals they've earned
+  athlete,
+  row_number() OVER (ORDER BY Medals DESC) AS Row_N
+FROM Athlete_Medals
+ORDER BY Medals DESC;
+
+
+
+Reigning weightlifting champions
+A reigning champion is a champion who's won both the previous and current years' competitions. 
+To determine if a champion is reigning, the previous and current years' results need to be in the same row, in two different columns.
+Return each year's gold medalists in the Men's 69KG weightlifting competition.
+
+SELECT
+  -- Return each year's champions' countries
+  year,
+  country AS champion
+FROM Summer_Medals
+WHERE
+  Discipline = 'Weightlifting' AND
+  Event = '69KG' AND
+  Gender = 'Men' AND
+  Medal = 'Gold';
+  
+  
+  
+  
+Having wrapped the previous query in the Weightlifting_Gold CTE, get the previous year's champion for each year.
+  
+WITH Weightlifting_Gold AS (
+  SELECT
+    -- Return each year's champions' countries
+    Year,
+    Country AS champion
+  FROM Summer_Medals
+  WHERE
+    Discipline = 'Weightlifting' AND
+    Event = '69KG' AND
+    Gender = 'Men' AND
+    Medal = 'Gold')
+
+SELECT
+  Year, Champion,
+  -- Fetch the previous year's champion
+  LAG(Champion,1) OVER
+    (ORDER BY YEAR ASC) AS Last_Champion
+FROM Weightlifting_Gold
+ORDER BY Year ASC;
+
+
+
+
