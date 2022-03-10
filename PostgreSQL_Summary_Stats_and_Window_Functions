@@ -408,5 +408,24 @@ ORDER BY Year ASC;
 
 
 
+Moving total of countries' medals
+What if your data is split into multiple groups spread over one or more columns in the table? 
+Even with a defined frame, if you can't somehow separate the groups' data, one group's values will affect the average of another group's values.
+Calculate the 3-year moving sum of medals earned per country.
 
+WITH Country_Medals AS (
+  SELECT
+    Year, Country, COUNT(*) AS Medals
+  FROM Summer_Medals
+  GROUP BY Year, Country)
 
+SELECT
+  Year, Country, Medals,
+  -- Calculate each country's 3-game moving total
+  sum(medals) OVER
+    (PARTITION BY country
+     ORDER BY Year ASC
+     ROWS BETWEEN
+     2 preceding AND current row) AS Medals_MA
+FROM Country_Medals
+ORDER BY Country ASC, Year ASC;
