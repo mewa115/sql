@@ -1,0 +1,20 @@
+As we saw in the video, PostgreSQL has a system database called INFORMATION_SCHEMA that allows us to extract information about objects, including tables, in our database.
+In this exercise we will look at how to query the tables table of the INFORMATION_SCHEMA database to discover information about tables in the DVD Rentals database 
+including the name, type, schema, and catalog of all tables and views and then how to use the results to get additional information about columns in our tables.
+Select all columns from the INFORMATION_SCHEMA.TABLES system database. Limit results that have a public table_schema.
+
+ -- Select all columns from the TABLES system database
+ SELECT * 
+ FROM INFORMATION_SCHEMA.tables
+ -- Filter by schema
+ WHERE table_schema = 'public';
+ 
+ 
+ 
+ Select all columns from the INFORMATION_SCHEMA.COLUMNS system database. Limit by table_name to actor
+ 
+  -- Select all columns from the COLUMNS system database
+ SELECT * 
+ FROM INFORMATION_SCHEMA.COLUMNS
+ WHERE table_name = 'actor';
+ 
