@@ -18,3 +18,31 @@ Select all columns from the INFORMATION_SCHEMA.TABLES system database. Limit res
  FROM INFORMATION_SCHEMA.COLUMNS
  WHERE table_name = 'actor';
  
+
+Determining data types
+The columns table of the INFORMATION_SCHEMA database also allows us to extract information about the data types of columns in a table. 
+We can extract information like the character or string length of a CHAR or VARCHAR column or the precision of a DECIMAL or NUMERIC floating point type.
+Using the techniques you learned in the lesson, let's explore the customer table of our DVD Rental database.
+Select the column name and data type from the INFORMATION_SCHEMA.COLUMNS system database.
+Limit results to only include the customer table.
+
+
+-- Get the column name and data type
+SELECT *
+-- From the system database information schema
+FROM INFORMATION_SCHEMA.COLUMNS 
+-- For the customer table
+WHERE table_name = 'customer';
+
+
+Interval data types
+INTERVAL data types provide you with a very useful tool for performing arithmetic on date and time data types. 
+For example, let's say our rental policy requires a DVD to be returned within 3 days. 
+We can calculate the expected_return_date for a given DVD rental by adding an INTERVAL of 3 days to the rental_date from the rental table. 
+We can then compare this result to the actual return_date to determine if the DVD was returned late.
+Select the rental date and return date from the rental table.
+Add an INTERVAL of 3 days to the rental_date to calculate the expected return date`.
+
+
+
+
