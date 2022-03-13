@@ -224,3 +224,32 @@ SELECT
 current_date,
 -- CAST the result of the NOW() function to a date
 cast(now() AS date)
+
+
+
+
+Manipulating the current date and time
+Most of the time when you work with the current date and time, you will want to transform, manipulate, or perform operations on the value in your queries. 
+In this exercise, you will practice adding an INTERVAL to the current timestamp as well as perform some more advanced calculations.
+Let's practice retrieving the current timestamp. For this exercise, please use CURRENT_TIMESTAMP instead of the NOW() function 
+and if you need to convert a date or time value to a timestamp data type, please use the PostgreSQL specific casting rather than the CAST() function.
+
+Select the current timestamp without timezone and alias it as right_now.
+--Select the current timestamp without timezone
+SELECT current_timestamp::timestamp AS right_now;
+
+Now select a timestamp five days from now and alias it as five_days_from_now.
+SELECT 	CURRENT_TIMESTAMP::timestamp AS right_now,
+interval '5 days' + CURRENT_TIMESTAMP AS five_days_from_now;
+
+
+
+Finally, let's use a second-level precision with no fractional digits for both the right_now and five_days_from_now fields.
+
+SELECT
+CURRENT_TIMESTAMP(2)::timestamp AS right_now,
+interval '5 days' + CURRENT_TIMESTAMP(2) AS five_days_from_now;
+
+
+
+
