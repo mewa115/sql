@@ -124,3 +124,48 @@ WHERE special_features @> ARRAY['Deleted Scenes'];
 
 
 
+Adding and subtracting date and time values
+In this exercise, you will calculate the actual number of days rented as well as the true expected_return_date 
+by using the rental_duration column from the film table along with the familiar rental_date from the rental table.
+This will require that you dust off the skills you learned from prior courses on how to join two or more tables together. 
+To select columns from both the film and rental tables in a single query, we'll need to use the inventory table 
+to join these two tables together since there is no explicit relationship between them. Let's give it a try!
+Subtract the rental_date from the return_date to calculate the number of days_rented.
+
+SELECT f.title, f.rental_duration,
+    -- Calculate the number of days rented
+    r.return_date - r.rental_date AS days_rented
+FROM film AS f
+     INNER JOIN inventory AS i ON f.film_id = i.film_id
+     INNER JOIN rental AS r ON i.inventory_id = r.inventory_id
+ORDER BY f.title;
+
+
+Now use the AGE() function to calculate the days_rented.
+SELECT f.title, f.rental_duration,
+    -- Calculate the number of days rented
+	age(return_date, rental_date) AS days_rented
+FROM film AS f
+	INNER JOIN inventory AS i ON f.film_id = i.film_id
+	INNER JOIN rental AS r ON i.inventory_id = r.inventory_id
+ORDER BY f.title;
+
+
+INTERVAL arithmetic
+If you were running a real DVD Rental store, there would be times when you would need to determine what film titles were currently out for rental with customers.
+In the previous exercise, we saw that some of the records in the results had a NULL value for the return_date. This is because the rental was still outstanding.
+Each rental in the film table has an associated rental_duration column which represents the number of days that a DVD can be rented by a customer before it is considered late. 
+In this example, you will exclude films that have a NULL value for the return_date and also convert the rental_duration to an INTERVAL type. 
+Here's a reminder of one method for performing this conversion.
+SELECT INTERVAL '1' day * timestamp '2019-04-10 12:34:56'
+Convert rental_duration by multiplying it with a 1 day INTERVAL
+Subtract the rental_date from the return_date to calculate the number of days_rented.
+Exclude rentals with a NULL value for return_date.
+
+
+
+
+
+
+
+
