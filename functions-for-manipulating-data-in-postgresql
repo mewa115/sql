@@ -750,3 +750,85 @@ return i * i;
 end;
 $$ language plpgsql;
 select squared(10)
+
+
+Extensions
+select name
+from pg_available_extensions;
+
+select extname
+from pg_extension
+
+
+install extension 
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+select extname from pg_extension
+
+
+Enabling extensions
+Before you can use the capabilities of an extension it must be enabled. 
+As you have previously learned, most PostgreSQL distributions come pre-bundled with many useful extensions to help extend the native features of your database. 
+You will be working with fuzzystrmatch and pg_trgm in upcoming exercises but before you can practice using the capabilities of these extensions 
+you will need to first make sure they are enabled in our database.
+In this exercise you will enable the pg_trgm extension and confirm that the fuzzystrmatch extension, which was enabled in the video, 
+is still enabled by querying the pg_extension system table.
+Enable the pg_trgm extension
+
+-- Enable the pg_trgm extension
+create extension IF NOT EXISTS pg_trgm ;
+
+
+Now confirm that both fuzzystrmatch and pg_trgm are enabled by selecting all rows from the appropriate system table.
+-- Select all rows extensions
+select * from pg_extension
+
+
+
+Measuring similarity between two strings
+Now that you have enabled the fuzzystrmatch and pg_trgm extensions you can begin to explore their capabilities. 
+First, we will measure the similarity between the title and description from the film table of the Sakila database.
+Select the film title and description.
+Calculate the similarity between the title and description.
+
+-- Select the title and description columns
+SELECT 
+  title, 
+  description, 
+  -- Calculate the similarity
+  similarity(title, description)
+FROM 
+  film
+  
+  
+  
+Levenshtein distance examples
+Now let's take a closer look at how we can use the levenshtein function to match strings against text data. 
+If you recall, the levenshtein distance represents the number of edits required to convert one string to another string being compared.
+In a search application or when performing data analysis on any data that contains manual user input, you will always want to account for typos or incorrect spellings.
+The levenshtein function provides a great method for performing this task. 
+In this exercise, we will perform a query against the film table using a search string with a misspelling and use the results from levenshtein to determine a match. 
+Let's check it out.
+Select the film title and film description.
+Calculate the levenshtein distance for the film title with the string JET NEIGHBOR.
+
+-- Select the title and description columns
+SELECT  
+  title, 
+  description, 
+  -- Calculate the levenshtein distance
+  levenshtein(title, 'JET NEIGHBOR') AS distance
+FROM 
+  film
+ORDER BY 3
+
+
+Putting it all together
+In this exercise, we are going to use many of the techniques and concepts we learned throughout the course to generate a data set that we could 
+use to predict whether the words and phrases used to describe a film have an impact on the number of rentals.
+First, you need to create a tsvector from the description column in the film table. You will match against a tsquery to determine if the phrase
+"Astounding Drama" leads to more rentals per month. Next, create a new column using the similarity function to rank the film descriptions based on this phrase.
+Select the title and description for all DVDs from the film table.
+Perform a full-text search by converting the description to a tsvector and match it to the phrase 'Astounding & Drama' using a tsquery in the WHERE clause.
+
+
+
