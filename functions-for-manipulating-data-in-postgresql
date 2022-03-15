@@ -688,6 +688,7 @@ For enum data types, you can also find the specific values that are valid for a 
 Let's dive into the exercises and learn more.
 Select the column_name, data_type, udt_name.
 Filter for the rating column in the film table.
+Verify that the new data type has been created by looking in the pg_type system table.
 
 -- Select the column name, data type and udt name columns
 SELECT column_name, data_type, udt_name
@@ -698,6 +699,54 @@ WHERE table_name ='film' AND column_name='rating';
 
 
 
-Verify that the new data type has been created by looking in the pg_type system table.
+
+Select all columns from the pg_type table where the type name is equal to mpaa_rating.
+SELECT *
+FROM pg_type 
+WHERE typname ='mpaa_rating'
 
 
+Select the title and inventory_id columns from the film and inventory tables in the database.
+-- Select the film title and inventory ids
+SELECT 
+	f.title, 
+    i.inventory_id
+FROM film AS f 
+	-- Join the film table to the inventory table
+	INNER JOIN inventory AS i ON f.film_id=i.film_id 
+	
+
+inventory_id is currently held by a customer and alias the column as held_by_cust
+inventory_held_by_customer was wrtitten by datacamp
+-- Select the film title, rental and inventory ids
+SELECT 
+	f.title, 
+    i.inventory_id,
+    -- Determine whether the inventory is held by a customer
+    inventory_held_by_customer(i.inventory_id) AS held_by_cust 
+FROM film as f 
+	-- Join the film table to the inventory table
+	INNER JOIN inventory AS i ON f.film_id=i.film_id
+group by f.title, inventory_id
+
+
+Now filter your query to only return records where the inventory_held_by_customer() function returns a non-null value.
+-- Select the film title and inventory ids
+SELECT 
+	f.title, 
+    i.inventory_id,
+    -- Determine whether the inventory is held by a customer
+    inventory_held_by_customer(i.inventory_id) as held_by_cust
+FROM film as f 
+	INNER JOIN inventory AS i ON f.film_id=i.film_id 
+WHERE
+	-- Only include results where the held_by_cust is not null
+    inventory_held_by_customer(i.inventory_id) is not null
+    
+    
+CREATE FUNCTION squared(i integer) returns integer as $$
+begin
+return i * i;
+end;
+$$ language plpgsql;
+select squared(10)
