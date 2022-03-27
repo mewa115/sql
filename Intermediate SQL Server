@@ -142,3 +142,53 @@ SELECT WeightValue,
        sqrt(WeightValue) AS WeightSqrt
 FROM Shipments
 
+
+
+
+Creating and using variables
+In T-SQL, to create a variable you use the DECLARE statement. 
+The variables must have an at sign (@) as their first character. Like most things in T-SQL, variables are not case sensitive.
+To assign a value to a variable, you can either use the keyword SET or a SELECT statement, then the variable name followed by an equal sign and a value.
+Create an integer variable named counter.
+Assign the value 20 to this variable.
+
+-- Declare the variable (a SQL Command, the var name, the datatype)
+declare @counter int
+-- Set the counter to 20
+set @counter = 20
+-- Select the counter
+SELECT @counter
+
+
+Increment the variable counter by 1 and assign it back to counter.
+-- Declare the variable (a SQL Command, the var name, the datatype)
+DECLARE @counter INT 
+-- Set the counter to 20
+SET @counter = 20
+-- Select and increment the counter by one 
+set @counter = @counter + 1
+-- Print the variable
+SELECT @counter
+
+
+
+Creating a WHILE loop
+In this exercise, you will use the variable you created in the previous exercise you write a WHILE loop. 
+Recall that structure:
+WHILE some_condition 
+BEGIN 
+    -- Perform some operation here
+END
+Write a WHILE loop that increments counter by 1 until counter is less than 30.
+
+DECLARE @counter INT 
+SET @counter = 20
+-- Create a loop
+while @counter < 30
+-- Loop code starting point
+begin
+	SELECT @counter = @counter + 1
+-- Loop finish
+end
+-- Check the value of the variable
+SELECT @counter
