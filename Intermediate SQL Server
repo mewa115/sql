@@ -73,6 +73,10 @@ Write a query that returns the number of days between OrderDate and ShipDate.
 
 
 
+-- datediff(datepart, first_date, second_date)
+-- dateadd(datepart, number, date)
+-- datepart is MM, DD, YYYY
+
 
 Counting the number of days between dates
 In this exercise, you will calculate the difference between the order date and ship date.
@@ -83,4 +87,58 @@ SELECT OrderDate, ShipDate,
 FROM Shipments
 
 
+
+Adding days to a date
+In this exercise, you will calculate the approximate delivery date of an order based on ShipDate.
+Write a query that returns the approximate delivery date as five days after the ShipDate.
+-- Return the DeliveryDate as 5 days after the ShipDate
+SELECT OrderDate, 
+       dateadd(dd, 5, ShipDate) AS DeliveryDate
+FROM Shipments
+
+
+Rounding numbers
+Sometimes, you only care about the whole dollar amount and want to ignore the decimal values of the cost. 
+In this exercise, you will round the cost to the nearest dollar.
+Write a SQL query to round the values in the Cost column to the nearest whole number.
+
+-- Round Cost to the nearest dollar
+SELECT Cost, 
+       round(Cost, 0) AS RoundedCost
+FROM Shipments
+
+
+
+Truncating numbers
+Since rounding can sometimes be misleading, i.e., $16.8 becomes $17 while $16.4 remains $16, 
+you may want to truncate the values after the decimal instead of rounding them. 
+When you truncate the numbers, both $16.8 and $16.4 remain $16.
+In this exercise, you will do just that, truncate the Cost column to a whole number.
+Write a SQL query to truncate the values in the Cost column to the nearest whole number.
+-- Truncate cost to whole number
+SELECT Cost, 
+       round(cost, 0, 1) AS TruncateCost
+FROM Shipments
+
+
+
+Calculating the absolute value
+The Shipments table contains some bad data. 
+There was a problem with the scales, and the weights show up as negative numbers. 
+In this exercise, you will write a query to convert all negative weights to positive weights.
+Write a query that converts all the negative values in the DeliveryWeight column to positive values.
+-- Return the absolute value of DeliveryWeight
+SELECT DeliveryWeight,
+       abs(DeliveryWeight) AS AbsoluteValue
+FROM Shipments
+
+
+Calculating squares and square roots
+It's time for you to practice calculating squares and square roots of columns.
+Write a query that calculates the square and square root of the WeightValue column.
+-- Return the square and square root of WeightValue
+SELECT WeightValue, 
+       square(WeightValue) AS WeightSquare, 
+       sqrt(WeightValue) AS WeightSqrt
+FROM Shipments
 
