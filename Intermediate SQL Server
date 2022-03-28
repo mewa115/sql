@@ -239,3 +239,131 @@ FROM Orders
 
 
 
+First value in a window
+Suppose you want to figure out the first OrderDate in each territory or the last one. 
+How would you do that? You can use the window functions FIRST_VALUE() and LAST_VALUE(), respectively! Here are the steps:
+First, create partitions for each territory
+Then, order by OrderDate
+Finally, use the FIRST_VALUE() and/or LAST_VALUE() functions as per your requirement
+Write a T-SQL query that returns the first OrderDate by creating partitions for each TerritoryName.
+
+
+SELECT TerritoryName, OrderDate, 
+       -- Select the first value in each partition
+       first_value(OrderDate) 
+       -- Create the partitions and arrange the rows
+       OVER(PARTITION BY TerritoryName order by OrderDate) AS FirstOrder
+FROM Orders
+
+
+
+
+Previous and next values
+What if you want to shift the values in a column by one row up or down? 
+You can use the exact same steps as in the previous exercise but with two new functions, LEAD(), for the next value, and LAG(), for the previous value. 
+So you follow these steps:
+First, create partitions
+Then, order by a certain column
+Finally, use the LEAD() and/or LAG() functions as per your requirement
+Write a T-SQL query that for each territory:
+Shifts the values in OrderDate one row down. Call this column PreviousOrder.
+Shifts the values in OrderDate one row up. Call this column NextOrder. You will need to PARTITION BY the territory
+
+
+SELECT TerritoryName, OrderDate, 
+       -- Specify the previous OrderDate in the window
+       lag(OrderDate) 
+       -- Over the window, partition by territory & order by order date
+       over(partition BY TerritoryName order BY OrderDate) AS PreviousOrder,
+       -- Specify the next OrderDate in the window
+       lead(OrderDate) 
+       -- Create the partitions and arrange the rows
+       over(partition BY TerritoryName order BY OrderDate) AS NextOrder
+FROM Orders
+
+
+Creating running totals
+You usually don't have to use ORDER BY when using aggregations, but if you want to create running totals, you should arrange your rows! 
+In this exercise, you will create a running total of OrderPrice.
+Create the window, partition by TerritoryName and order by OrderDate to calculate a running total of OrderPrice.
+
+SELECT TerritoryName, OrderDate, 
+       -- Create a running total
+       sum(OrderPrice) 
+       -- Create the partitions and arrange the rows
+       over(partition by TerritoryName order by OrderDate) AS TerritoryTotal	  
+FROM Orders
+
+
+
+Assigning row numbers
+Records in T-SQL are inherently unordered. Although in certain situations, you may want to assign row numbers for reference. 
+In this exercise, you will do just that.
+Write a T-SQL query that assigns row numbers to all records partitioned by TerritoryName and ordered by OrderDate.
+SELECT TerritoryName, OrderDate, 
+       -- Assign a row number
+       row_number() 
+       -- Create the partitions and arrange the rows
+       OVER(PARTITION BY TerritoryName ORDER BY OrderDate) AS OrderCount
+FROM Orders
+
+
+Calculating standard deviation
+Calculating the standard deviation is quite common when dealing with numeric columns. 
+In this exercise, you will calculate the running standard deviation, similar to the running total you calculated in the previous lesson.
+Create the window, partition by TerritoryName and order by OrderDate to calculate a running standard deviation of OrderPrice.
+
+SELECT OrderDate, TerritoryName, 
+       -- Calculate the standard deviation
+	   stdev(OrderPrice)
+       OVER(PARTITION BY TerritoryName ORDER BY OrderDate) AS StdDevPrice	  
+FROM Orders
+
+
+
+Calculating mode (I)
+Unfortunately, there is no function to calculate the mode, the most recurring value in a column. To calculate the mode:
+First, create a CTE containing an ordered count of values using ROW_NUMBER()
+Write a query using the CTE to pick the value with the highest row number
+In this exercise, you will write the CTE needed to calculate the mode of OrderPrice.
+Create a CTE ModePrice that returns two columns (OrderPrice and UnitPriceFrequency).
+Write a query that returns all rows in this CTE.
+
+-- Create a CTE Called ModePrice which contains two columns
+with ModePrice (OrderPrice, UnitPriceFrequency)
+as
+(
+	SELECT OrderPrice, 
+	ROW_NUMBER() 
+	OVER(PARTITION BY OrderPrice ORDER BY OrderPrice) AS UnitPriceFrequency
+	FROM Orders 
+)
+
+-- Select everything from the CTE
+select *
+from ModePrice
+
+
+
+
+Calculating mode (II)
+In the last exercise, you created a CTE which assigned row numbers to each unique value in OrderPrice.
+All you need to do now is to find the OrderPrice with the highest row number.
+Use the CTE ModePrice to return the value of OrderPrice with the highest row number.
+
+-- CTE from the previous exercise
+WITH ModePrice (OrderPrice, UnitPriceFrequency)
+AS
+(
+	SELECT OrderPrice,
+	ROW_NUMBER() 
+    OVER (PARTITION BY OrderPrice ORDER BY OrderPrice) AS UnitPriceFrequency
+	FROM Orders
+)
+
+-- Select the order price from the CTE
+SELECT OrderPrice AS ModeOrderPrice
+FROM ModePrice
+-- Select the maximum UnitPriceFrequency from the CTE
+WHERE UnitPriceFrequency IN (select max(UnitPriceFrequency) FROM ModePrice)
+
