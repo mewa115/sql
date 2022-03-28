@@ -192,3 +192,21 @@ begin
 end
 -- Check the value of the variable
 SELECT @counter
+
+
+
+
+----If statements
+declare @ctr int
+set @ctr =1
+while @ctr<10
+begin
+set @ctr = @ctr + 1
+if @ctr = 4
+break
+end
+
+if @ctr = 4
+break 
+
+
