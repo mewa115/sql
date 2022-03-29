@@ -1,0 +1,172 @@
+select datepart(year, @dt) as theyear;
+select datename(month, @dt) as themonth;
+
+
+@declare @sometime datetime(7) = '1992-07-14 14:44:22.34243222';
+select dateadd(day,1,@sometime) as nextday;
+select dateadd(day,-1,@sometime) as priorday;
+select dateadd(hour,-3,dateadd(day, -4,@sometime)) as Minus4days3hours
+select datediff(second @starttime, @endtime)
+
+
+Break out a date into year, month, and day
+SQL Server has a number of functions dedicated to working with date types. 
+We will first analyze three functions which return integers representing the year, month, and day of month, respectively.
+These functions can allow us to group dates together, letting us calculate running totals by year or month-over-month comparisons of expenditures. 
+We could also analyze sales by calendar day of the month to determine if there is a strong monthly cycle.
+Use the YEAR(), MONTH(), and DAY() functions to determine the year, month, and day for the current date and time.
+
+DECLARE
+	@SomeTime DATETIME2(7) = SYSUTCDATETIME();
+
+-- Retrieve the year, month, and day
+SELECT
+	year(@SomeTime) AS TheYear,
+	month(@SomeTime) AS TheMonth,
+	day(@SomeTime) AS TheDay;
+  
+  
+  
+Break a date and time into component parts
+Although YEAR(), MONTH(), and DAY() are helpful functions and are easy to remember, we often want to break out dates into different component parts
+such as the day of week, week of year, and second after the minute. This is where functions like DATEPART() and DATENAME() come into play.
+Here we will use the night the Berlin Wall fell, November 9th, 1989.
+Using the DATEPART() function, fill in the appropriate date parts. 
+For a list of parts, review https://docs.microsoft.com/en-us/sql/t-sql/functions/datepart-transact-sql
+
+DECLARE
+	@BerlinWallFalls DATETIME2(7) = '1989-11-09 23:49:36.2294852';
+
+-- Fill in each date part
+SELECT
+	DATEPART(year, @BerlinWallFalls) AS TheYear,
+	DATEPART(month, @BerlinWallFalls) AS TheMonth,
+	DATEPART(day, @BerlinWallFalls) AS TheDay,
+	DATEPART(dayofyear, @BerlinWallFalls) AS TheDayOfYear,
+    -- Day of week is WEEKDAY
+	DATEPART(WEEKDAY, @BerlinWallFalls) AS TheDayOfWeek,
+	DATEPART(week, @BerlinWallFalls) AS TheWeek,
+	DATEPART(second, @BerlinWallFalls) AS TheSecond,
+	DATEPART(nanosecond, @BerlinWallFalls) AS TheNanosecond;
+  
+Results -->
+TheYear	TheMonth	TheDay	TheDayOfYear	TheDayOfWeek	TheWeek	TheSecond	TheNanosecond
+1989	  11	      9	        313	          5	            45	    36	      229485200
+
+
+
+Using the DATENAME() function, fill in the appropriate function calls.
+DECLARE
+	@BerlinWallFalls DATETIME2(7) = '1989-11-09 23:49:36.2294852';
+-- Fill in the function to show the name of each date part
+SELECT
+	DATENAME(YEAR, @BerlinWallFalls) AS TheYear,
+	DATENAME(MONTH, @BerlinWallFalls) AS TheMonth,
+	DATENAME(DAY, @BerlinWallFalls) AS TheDay,
+	DATENAME(DAYOFYEAR, @BerlinWallFalls) AS TheDayOfYear,
+    -- Day of week is WEEKDAY
+	DATENAME(WEEKDAY, @BerlinWallFalls) AS TheDayOfWeek,
+	DATENAME(WEEK, @BerlinWallFalls) AS TheWeek,
+	DATENAME(SECOND, @BerlinWallFalls) AS TheSecond,
+	DATENAME(NANOSECOND, @BerlinWallFalls) AS TheNanosecond;
+
+
+TheYear	  TheMonth	TheDay	TheDayOfYear	TheDayOfWeek	TheWeek	TheSecond	TheNanosecond
+1989	    November	9	      313	          Thursday	      45	  36	      229485200
+
+
+
+
+
+Date math and leap years
+Some of you may have experience using R and here we note that leap year date math can be tricky with R and the lubridate package. 
+lubridate has two types of functions: duration and period.
+lubridate::ymd(20120229) - lubridate::dyears(4) --> 2008-03-01, which is wrong.
+lubridate::ymd(20120229) - lubridate::dyears(1) --> 2011-03-01, which is correct.
+lubridate::ymd(20120229) - lubridate::years(4) --> 2008-02-29, which is correct.
+lubridate::ymd(20120229) - lubridate::years(1) --> NA, which is unexpected behavior.
+We can use the DATEADD() and DATEDIFF() functions to see how SQL Server deals with leap years to see if it has any of the same eccentricities.
+Fill in the date parts and intervals needed to determine how SQL Server works on February 29th of a leap year.
+2012 was a leap year. The leap year before it was 4 years earlier, and the leap year after it was 4 years later.
+
+
+DECLARE
+	@LeapDay DATETIME2(7) = '2012-02-29 18:00:00';
+
+-- Fill in the date parts and intervals as needed
+SELECT
+	DATEADD(day, -1, @LeapDay) AS PriorDay,
+	DATEADD(day, 1, @LeapDay) AS NextDay,
+    -- For leap years, we need to move 4 years, not just 1
+	DATEADD(YEAR, -4, @LeapDay) AS PriorLeapYear,
+	DATEADD(YEAR, 4, @LeapDay) AS NextLeapYear,
+	DATEADD(year, -1, @LeapDay) AS PriorYear;
+  PriorDay	            NextDay	              PriorLeapYear	      NextLeapYear	    PriorYear
+2012-02-28  18:00:00	2012-03-01 18:00:00	2008-02-29 18:00:00	2016-02-29 18:00:00	2011-02-28 18:00:00
+  
+  
+  
+  DECLARE
+	@PostLeapDay DATETIME2(7) = '2012-03-01 18:00:00';
+
+-- Fill in the date parts and intervals as needed
+SELECT
+	DATEADD(DAY, -1, @PostLeapDay) AS PriorDay,
+	DATEADD(DAY, 1, @PostLeapDay) AS NextDay,
+	DATEADD(YEAR, -4, @PostLeapDay) AS PriorLeapYear,
+	DATEADD(YEAR, 4, @PostLeapDay) AS NextLeapYear,
+	DATEADD(YEAR, -1, @PostLeapDay) AS PriorYear,
+    -- Move 4 years forward and one day back
+	DATEADD(day, -1, DATEADD(year, 4, @PostLeapDay)) AS NextLeapDay,
+    DATEADD(day, -2, @PostLeapDay) AS TwoDaysAgo;
+    
+    
+ PriorDay	          NextDay	              PriorLeapYear	      NextLeapYear	      PriorYear	          NextLeapDay	        TwoDaysAgo
+2012-02-29 18:00:00	2012-03-02 18:00:00	2008-03-01 18:00:00	2016-03-01 18:00:00	2011-03-01 18:00:00	2016-02-29 18:00:00	2012-02-28 18:00:00
+
+
+
+Taking TwoDaysAgo from the prior step, use the DATEDIFF() function to test how it handles leap years.
+DECLARE
+	@PostLeapDay DATETIME2(7) = '2012-03-01 18:00:00',
+    @TwoDaysAgo DATETIME2(7);
+
+SELECT
+	@TwoDaysAgo = DATEADD(DAY, -2, @PostLeapDay);
+
+SELECT
+	@TwoDaysAgo AS TwoDaysAgo,
+	@PostLeapDay AS SomeTime,
+    -- Fill in the appropriate function and date types
+	datediff(day, @TwoDaysAgo, @PostLeapDay) AS DaysDifference,
+	datediff(hour, @TwoDaysAgo, @PostLeapDay) AS HoursDifference,
+	datediff(minute, @TwoDaysAgo, @PostLeapDay) AS MinutesDifference;
+  
+  TwoDaysAgo	          SomeTime	          DaysDifference	HoursDifference	    MinutesDifference
+2012-02-28 18:00:00	  2012-03-01 18:00:00	      2	              48	            2880
+
+
+
+
+Rounding dates
+SQL Server does not have an intuitive way to round down to the month, hour, or minute. 
+You can, however, combine the DATEADD() and DATEDIFF() functions to perform this rounding.
+To round the date 1914-08-16 down to the year, we would call DATEADD(YEAR, DATEDIFF(YEAR, 0, '1914-08-16'), 0). 
+To round that date down to the month, we would call DATEADD(MONTH, DATEDIFF(MONTH, 0, '1914-08-16'), 0).
+This works for several other date parts as well.
+Use DATEADD() and DATEDIFF() in conjunction with date parts to round down our time to the day, hour, and minute.
+
+DECLARE
+	@SomeTime DATETIME2(7) = '2018-06-14 16:29:36.2248991';
+
+-- Fill in the appropriate functions and date parts
+SELECT
+	DATEADD(day, DATEDIFF(day, 0, @SomeTime), 0) AS RoundedToDay,
+	DATEADD(hour, DATEDIFF(hour, 0, @SomeTime), 0) AS RoundedToHour,
+	DATEADD(minute, DATEDIFF(minute, 0, @SomeTime), 0) AS RoundedToMinute;
+  
+  
+RoundedToDay	        RoundedToHour	        RoundedToMinute
+2018-06-14 00:00:00	2018-06-14 16:00:00	    2018-06-14 16:29:00
+
+
