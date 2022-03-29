@@ -170,3 +170,196 @@ RoundedToDay	        RoundedToHour	        RoundedToMinute
 2018-06-14 00:00:00	2018-06-14 16:00:00	    2018-06-14 16:29:00
 
 
+
+
+Formatting dates with CAST() and CONVERT()
+We can use the CAST() function to translate data between various data types, including between date/time types and string types. 
+The CONVERT() function takes three parameters: a data type, an input value, and an optional format code.
+In this exercise, we will see how we can use the CAST() and CONVERT() functions to translate dates to strings for formatting
+by looking at the (late) night the Chicago Cubs won the World Series in the US in 2016. 
+In the process, we will see one difference between the DATETIME and the DATETIME2 data types for CAST() and the added flexibility of CONVERT().
+Fill in the appropriate function, CAST(), for each example.
+Using the aliases as a guide, fill in the appropriate variable for each example.
+
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245',
+	@OlderDateType DATETIME = '2016-11-03 00:30:29.245';
+
+SELECT
+	-- Fill in the missing function calls
+	cast(@CubsWinWorldSeries AS DATE) AS CubsWinDateForm,
+	cast(@CubsWinWorldSeries AS NVARCHAR(30)) AS CubsWinStringForm,
+	cast(@OlderDateType AS DATE) AS OlderDateForm,
+	cast(@OlderDateType AS NVARCHAR(30)) AS OlderStringForm;
+
+CubsWinDateForm	CubsWinStringForm		OlderDateForm	OlderStringForm
+2016-11-03	2016-11-03 00:30:29.245		2016-11-03	Nov  3 2016 12:30AM
+
+
+
+Formatting dates with CAST() and CONVERT()
+We can use the CAST() function to translate data between various data types, including between date/time types and string types. 
+The CONVERT() function takes three parameters: a data type, an input value, and an optional format code.
+In this exercise, we will see how we can use the CAST() and CONVERT() functions to translate dates to strings
+for formatting by looking at the (late) night the Chicago Cubs won the World Series in the US in 2016. In the process, 
+we will see one difference between the DATETIME and the DATETIME2 data types for CAST() and the added flexibility of CONVERT().
+
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
+
+SELECT
+	cast(cast(@CubsWinWorldSeries AS date) AS NVARCHAR(30)) AS DateStringForm;
+	
+
+
+Use the CONVERT() function to translate the date the Cubs won the world series into the DATE and NVARCHAR(30) data types.
+The functional form for CONVERT() is CONVERT(DataType, SomeValue).
+
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
+
+SELECT
+	convert(date, @CubsWinWorldSeries) AS CubsWinDateForm,
+	convert(NVARCHAR(30), @CubsWinWorldSeries) AS CubsWinStringForm;
+	
+
+
+DECLARE
+	@CubsWinWorldSeries DATETIME2(3) = '2016-11-03 00:30:29.245';
+
+SELECT
+	convert(NVARCHAR(30), @CubsWinWorldSeries, 0) AS DefaultForm,
+	convert(NVARCHAR(30), @CubsWinWorldSeries, 3) AS UK_dmy,
+	convert(NVARCHAR(30), @CubsWinWorldSeries, 1) AS US_mdy,
+	convert(NVARCHAR(30), @CubsWinWorldSeries, 103) AS UK_dmyyyy,
+	convert(NVARCHAR(30), @CubsWinWorldSeries, 101) AS US_mdyyyy;
+
+DefaultForm		UK_dmy		US_mdy		UK_dmyyyy	US_mdyyyy
+Nov  3 2016 12:30AM	03/11/16	11/03/16	03/11/2016	11/03/2016
+
+
+
+
+Formatting dates with FORMAT()
+The FORMAT() function allows for additional flexibility in building dates. It takes in three parameters: 
+the input value, the input format, and an optional culture (such as en-US for US English or zh-cn for Simplified Chinese).
+In the following exercises, we will investigate three separate methods for formatting dates using the FORMAT() function
+against the day that Python 3 became generally available: December 3rd, 2008.
+Fill in the function and use the 'd' format parameter (note that this is case sensitive!) to format as short dates. 
+Also, fill in the culture for Japan, which in the .NET framework is jp-JP (this is not case sensitive).
+
+DECLARE
+	@Python3ReleaseDate DATETIME2(3) = '2008-12-03 19:45:00.033';
+
+SELECT
+	-- Fill in the function call and format parameter
+	format(@Python3ReleaseDate, 'd', 'en-US') AS US_d,
+	format(@Python3ReleaseDate, 'd', 'de-DE') AS DE_d,
+	-- Fill in the locale for Japan
+	format(@Python3ReleaseDate, 'd', 'jp-JP') AS JP_d,
+	format(@Python3ReleaseDate, 'd', 'zh-cn') AS CN_d;
+	
+US_d		DE_d		JP_d		CN_d
+12/3/2008	03.12.2008	12/03/2008	2008/12/3
+
+
+
+Fill in the custom format strings needed to generate the results in preceding comments. 
+Use date parts such as yyyy, MM, MMM, and dd. 
+Capitalization is important for the FORMAT() function! See the full list at https://bit.ly/30SGA5a.
+
+DECLARE
+	@Python3ReleaseDate DATETIME2(3) = '2008-12-03 19:45:00.033';
+    
+SELECT
+	-- 20081203
+	FORMAT(@Python3ReleaseDate, 'yyyyMMdd') AS F1,
+	-- 2008-12-03
+	FORMAT(@Python3ReleaseDate, 'yyyy-MM-dd') AS F2,
+	-- Dec 03+2008 (the + is just a "+" character)
+	FORMAT(@Python3ReleaseDate, 'MMM dd+yyyy') AS F3,
+	-- 12 08 03 (month, two-digit year, day)
+	FORMAT(@Python3ReleaseDate, 'MM yy dd') AS F4,
+	-- 03 07:45 2008.00
+    -- (day hour:minute year.second)
+	FORMAT(@Python3ReleaseDate, 'dd hh:mm yyyy.ss') AS F5;
+	
+
+
+Try out a calendar table
+Calendar tables are also known in the warehousing world as date dimensions. 
+A calendar table is a helpful utility table which you can use to perform date range calculations quickly and efficiently. 
+This is especially true when dealing with fiscal years, which do not always align to a calendar year, or holidays which may not be on the same date every year.
+In our example company, the fiscal year starts on July 1 of the current calendar year, so Fiscal Year 2019 started on July 1, 2019 and goes through June 30, 2020. 
+All of this information is in a table called dbo.Calendar.
+Find the dates of all Tuesdays in December covering the calendar years 2008 through 2010.
+	
+
+-- Find Tuesdays in December for calendar years 2008-2010
+SELECT
+	c.Date
+FROM dbo.Calendar c
+WHERE
+	c.MonthName = 'December'
+	AND c.DayName = 'Tuesday'
+	AND c.CalendarYear BETWEEN 2008 AND 2010
+ORDER BY
+	c.Date;
+	
+	
+
+Try out a calendar table
+Calendar tables are also known in the warehousing world as date dimensions. 
+A calendar table is a helpful utility table which you can use to perform date range calculations quickly and efficiently. 
+This is especially true when dealing with fiscal years, which do not always align to a calendar year, or holidays which may not be on the same date every year.
+In our example company, the fiscal year starts on July 1 of the current calendar year, so Fiscal Year 2019 started on July 1, 2019 and goes through June 30, 2020. 
+All of this information is in a table called dbo.Calendar.
+	
+-- Find fiscal week 29 of fiscal year 2019
+SELECT
+	c.Date
+FROM dbo.Calendar c
+WHERE
+    -- Instead of month, use the fiscal week
+	c.FiscalWeekOfYear = 29
+    -- Instead of calendar year, use fiscal year
+	AND c.FiscalYear = 2019
+ORDER BY
+	c.Date ASC;
+	
+
+
+Joining to a calendar table
+In the prior exercise, we looked at a new table, dbo.Calendar. 
+This table contains pre-calculated date information stretching from January 1st, 2000 through December 31st, 2049. 
+Now we want to use this calendar table to filter another table, dbo.IncidentRollup.
+The Incident Rollup table contains artificially-generated data relating to security incidents at a fictitious company.
+You may recall from prerequisite courses how to join tables. Here's an example of joining to a calendar table:
+
+SELECT
+    t.Column1,
+    t.Column2
+FROM dbo.Table t
+    INNER JOIN dbo.Calendar c
+        ON t.Date = c.Date;
+Fill in the blanks to determine which dates had type 3 incidents during the third fiscal quarter of FY2019.
+
+
+
+select
+fystart = dateadd(month, -6, dateadd(year, datediff(year, 0, dateadd(month, 6, d.[date])),0),
+fiscalDayofYear = datediff(day, dateadd(month, -6, datedd(year, datediff(year, 0, dateadd(month,6,d.[date])), d.[date]) + 1),
+fiscalweekoftheyear = datediff(week, dateadd(month, -6, dateadd(year, datediff(year, 0, dateadd(month,6,d.[date])), d.[date]) + 1
+from dbo.Calendar
+
+
+
+select 
+fy.FYStart, 
+fiscaldayoftheyear = datediff(day, fy.FYStart, d.[Date]) + 1,
+fiscalweekoftheyear = datediff(week, fy.FYStart, d.[Date]) + 1,
+from dbo.Calendar
+cross APPLY ( select fyStart = dateadd(month, -6, dateadd(year, datediff(year,0, dateadd(month, 6, d.[date])), 0))) fy;
+
+
+
