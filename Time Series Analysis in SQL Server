@@ -362,6 +362,14 @@ from dbo.Calendar
 cross APPLY ( select fyStart = dateadd(month, -6, dateadd(year, datediff(year,0, dateadd(month, 6, d.[date])), 0))) fy;
 
 
+
+datefromparts(year, month, day)
+timefromparts(hour, minute,second, fraction, precision)
+datetimefromparts(year, month, day, hour, minute,second,ms)
+datetime2fromparts(year, month, day, hour, minute,second, fraction, precision)
+datetimeoffsetfromparts(year, month, day, hour, minute, second, fraction, hour_offset, minute_offset, precision)
+
+
 Build dates from parts
 The DATEFROMPARTS() function allows us to turn a series of numbers representing date parts into a valid DATE data type. 
 In this exercise, we will learn how to use DATEFROMPARTS() to build dates from components in a calendar table.
