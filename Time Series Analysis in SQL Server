@@ -505,3 +505,5 @@ SELECT
 	parse(d.DateText AS DATETIME2(7) USING 'de-de') AS StringAsDateTime2
 FROM dbo.Dates d;
 
+
+
