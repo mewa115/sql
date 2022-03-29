@@ -81,4 +81,107 @@ having
 ORDER BY 
   demand_loss DESC;
   
+
+
+Create a table named 'results' with 4 VARCHAR columns called track, artist, and album, with lengths 200, 120, and 160, respectively and last one integer.
+  -- Create the table
+CREATE TABLE results (
+	-- Create track column
+	track VARCHAR(200),
+    -- Create artist column
+	artist VARCHAR(120),
+    -- Create album column
+	album VARCHAR(160),
+	-- Create track_length_mins
+	track_length_mins INT,
+	);
+
+
+Insert the track 'Basket Case', from the album 'Dookie', with a track length of 3, into the appropriate columns. 
+Then perform the SELECT * once more to view your newly inserted row.
+-- Create the table
+CREATE TABLE tracks(
+  -- Create track column
+  track VARCHAR(200), 
+  -- Create album column
+  album VARCHAR(160), 
+  -- Create track_length_mins column
+  track_length_mins INT
+);
+-- Complete the statement to enter the data to the table         
+insert INTO tracks
+-- Specify the destination columns
+(track, album, track_length_mins)
+-- Insert the appropriate values for track, album and track length
+VALUES
+  ('Basket Case', 'Dookie', 3);
+-- Select all columns from the new table
+SELECT 
+  *
+FROM 
+  tracks;
   
+  
+
+That's a very long album title, isn't it?
+Use an UPDATE statement to modify the title to 'Pure Cult: The Best Of The Cult'.
+-- Run the query
+SELECT 
+  title 
+FROM 
+  album 
+WHERE 
+  album_id = 213;
+-- UPDATE the album table
+update  
+  album
+-- SET the new title    
+set 
+  title = 'Pure Cult: The Best Of The Cult'
+WHERE album_id = 213;
+
+
+DELETE the record from album where album_id is 1 and then hit 'Submit Answer'.
+
+-- Run the query
+SELECT 
+  * 
+FROM 
+  album 
+  -- DELETE the record
+delete FROM 
+  album 
+WHERE 
+  album_id = 1;
+  -- Run the query again
+SELECT 
+  * 
+FROM 
+  album;
+  
+  
+-- Declare your variables
+DECLARE @start DATE
+DECLARE @stop DATE
+DECLARE @affected INT;
+-- SET the relevant values for each variable
+SET @start = '2014-01-24'
+SET @stop  = '2014-07-02'
+SET @affected =  5000 ;
+
+SELECT 
+  description,
+  nerc_region,
+  demand_loss_mw,
+  affected_customers
+FROM 
+  grid
+-- Specify the date range of the event_date and the value for @affected
+where event_date between @start AND @stop
+AND affected_customers >= @affected;
+
+
+
+
+
+
