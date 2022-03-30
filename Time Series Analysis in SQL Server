@@ -579,3 +579,10 @@ SELECT
 	
 PhoenixTime				TuvaluTime
 2016-08-21 16:00:00.0000000 -07:00	2016-08-22 11:00:00.0000000 +12:00
+
+
+
+The SWITCHOFFSET() function is better for these types of time zone conversions but TODATETIMEOFFSET() can do in a pinch.
+Where this function excels is taking normal dates in a database and converting them in preparation for storage as DATETIMEOFFSET types.
+
+
