@@ -507,3 +507,75 @@ FROM dbo.Dates d;
 
 
 
+
+
+Changing a date's offset
+We can use the SWITCHOFFSET() function to change the time zone of a DATETIME, DATETIME2, or DATETIMEOFFSET typed date or a valid date string. 
+SWITCHOFFSET() takes two parameters: the date or string as input and the time zone offset. 
+It returns the time in that new time zone, so 3:00 AM Eastern Daylight Time will become 2:00 AM Central Daylight Time.
+The 2016 Summer Olympics in Rio de Janeiro started at 11 PM UTC on August 8th, 2016. 
+Starting with a string containing that date and time, we can see what time that was in other locales.
+Fill in the appropriate function call for Brasilia, Brazil.
+Fill in the appropriate function call and time zone for Chicago, Illinois. 
+In August, Chicago is 2 hours behind Brasilia Standard Time.
+Fill in the appropriate function call and time zone for New Delhi, India. 
+India does not observe Daylight Savings Time, so in August, New Delhi is 8 1/2 hours ahead of Brasilia Standard Time. 
+Note when calculating time zones that Brasilia and New Delhi are on opposite sides of UTC.
+
+
+DECLARE
+	@OlympicsUTC NVARCHAR(50) = N'2016-08-08 23:00:00';
+
+SELECT
+	-- Fill in the time zone for Brasilia, Brazil
+	SWITCHOFFSET(@OlympicsUTC, '-03:00') AS BrasiliaTime,
+	-- Fill in the time zone for Chicago, Illinois
+	SWITCHOFFSET(@OlympicsUTC, '-05:00') AS ChicagoTime,
+	-- Fill in the time zone for New Delhi, India
+	SWITCHOFFSET(@OlympicsUTC, '+05:30') AS NewDelhiTime;
+	
+
+BrasiliaTime				ChicagoTime				NewDelhiTime
+2016-08-08 20:00:00.0000000 -03:00	2016-08-08 18:00:00.0000000 -05:00	2016-08-09 04:30:00.0000000 +05:30
+
+
+
+Using the time zone DMV to look up times
+The SWITCHOFFSET() function has an undesirable limitation: you need to know the offset value yourself. 
+You might memorize that US Eastern Standard Time is UTC -5:00 and Eastern Daylight Time is UTC -04:00, 
+but knowing India Standard Time or Tuvalu Time might be a stretch.
+Fortunately, we have a Dynamic Management View (DMV) available to help us: sys.time_zone_info. 
+This searches the set of time zones available on the operating system (in the Windows registry or /usr/share/zoneinfo on Linux or macOS).
+The 2016 Summer Olympics in Rio de Janeiro started at 11 PM UTC on August 8th, 2016. 
+Starting with a string containing that date and time, we can see what time that was in other locales knowing only the time zone name but not its offset.
+
+
+select @olympicUTC NVARCHAR(60) = N'2016-08-08 23:00:00'
+select SWITCHOFFSET(@olympicUTC, tzi.current_utc_offset) as NDelhitime
+from sys.time_zone_info as tzi 
+where
+tzi.name = N'Indian Standard Time';
+
+Converting to a date offset
+In addition to SWITCHOFFSET(), we can use the TODATETIMEOFFSET() to turn an existing date into a date type with an offset. 
+If our starting time is in UTC, we will need to correct for time zone and then append an offset. 
+To correct for the time zone, we can add or subtract hours (and minutes) manually.
+Closing ceremonies for the 2016 Summer Olympics in Rio de Janeiro began at 11 PM UTC on August 21st, 2016. 
+Starting with a string containing that date and time, we can see what time that was in other locales. 
+For the time in Phoenix, Arizona, you know that they observe Mountain Standard Time, which is UTC -7 year-round.
+The island chain of Tuvalu has its own time which is 12 hours ahead of UTC.
+Fill in the time in Phoenix, Arizona, which, being Mountain Standard Time, was UTC -07:00.
+Fill in the time for Tuvalu, which is 12 hours ahead of UTC.
+
+
+DECLARE
+	@OlympicsClosingUTC DATETIME2(0) = '2016-08-21 23:00:00';
+
+SELECT
+	-- Fill in 7 hours back and a '-07:00' offset
+	TODATETIMEOFFSET(DATEADD(HOUR, -7, @OlympicsClosingUTC), '-07:00') AS PhoenixTime,
+	-- Fill in 12 hours forward and a '+12:00' offset.
+	TODATETIMEOFFSET(DATEADD(HOUR, +12, @OlympicsClosingUTC), '+12:00') AS TuvaluTime;
+	
+PhoenixTime				TuvaluTime
+2016-08-21 16:00:00.0000000 -07:00	2016-08-22 11:00:00.0000000 +12:00
