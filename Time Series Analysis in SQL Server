@@ -872,3 +872,6 @@ WHERE
 	AND c.CalendarYear = 2020
 GROUP BY
 it.IncidentType;
+
+
+-----
