@@ -1,0 +1,290 @@
+/* ******************************************************************************************************************************
+ * Scenario 2: Multivalued Relationships. Part 1
+ * 
+ * Inputs:
+ *   4 target tables: 
+ *     1) dim_technician (already prepolulated)
+ *     2) dim_technician_group: table where each combination of people (each group) would have just one record 
+ *     3) bridge_technician_group: bridge table which would bound dim_technician with dim_technician_group
+ *     4) fact_inspection with granularity of one record per inspection.
+ * 
+ *   1 input table:
+ *     1) staging fact-like table with inspections info. Each inspection(defined by inspection_id) is performed by a couple of employees
+ *     
+ ****************************************************************************************************************************** */
+
+------------------------------------------------------------------------------------------------------------------
+-- Initialization (target tables)
+------------------------------------------------------------------------------------------------------------------
+drop table if exists dim_technician;
+create table dim_technician(
+    employee_sk serial primary key,
+    employee_bk varchar(255),
+    full_name  varchar(255)
+);
+truncate table dim_technician;
+insert into dim_technician(employee_bk, full_name) 
+values 
+('uk100', 'Lori Smith'),
+('uk101', 'Ivan Kohut'),
+('uk102', 'Oksana Lysytsia'),
+('uk103', 'Iryna Vovk'),
+('uk104', 'Mag Smith'),
+('uk105', 'Ivanka Kohut'),
+('uk106', 'Leyla Lysytsia'),
+('uk107', 'Olesia Vovk'),
+('uk108', 'John Smith'),
+('uk109', 'Ivan Piven'),
+('uk110', 'Oksana Baran'),
+('uk111', 'Iryna Zayets');
+
+drop table if exists dim_technician_group;
+create table dim_technician_group(
+    employee_group_sk serial primary key,
+    group_code varchar(1024)
+);
+
+drop table if exists bridge_technician_group;
+create table bridge_technician_group(
+    employee_group_sk int,
+    employee_sk int
+);
+
+drop table if exists fact_inspection;
+create table fact_inspection(
+    inspection_id int not null primary key,
+    employee_group_sk int
+);
+
+
+------------------------------------------------------------------------------------------------------------------
+-- Initialization (source data)
+------------------------------------------------------------------------------------------------------------------
+drop table if exists stg_inspection;
+create table stg_inspection(
+  inspection_id int not null,
+  employee_bk varchar(255) not null,
+  primary key (inspection_id, employee_bk)
+);  
+insert into stg_inspection values
+(1,'uk100'),(1,'uk101'),(2,'uk100'),(2,'uk101'),(3,'uk100'),(3,'uk101'),(3,'uk102'),(4,'uk102'),
+(4,'uk103'),(4,'uk104'),(5,'uk102'),(5,'uk103'),(6,'uk105'),(6,'uk106'),(6,'uk107'),(7,'uk107'),
+(7,'uk105'),(7,'uk106'),(8,'uk106'),(8,'uk107'),(8,'uk105'),(9,'uk109'),(10,'uk109'),(10,'uk110'),
+(11,'uk109'),(11,'uk110'),(11,'uk111'),(12,'uk108'),(12,'uk109'),(13,'uk107'),(13,'uk108'),
+(14,'uk107'),(14,'uk108'),(15,'uk108'),(15,'uk107'),(16,'uk104'),(16,'uk105'),(16,'uk106'),
+(17,'uk104'),(17,'uk105'),(17,'uk106'),(18,'uk104'),(18,'uk105'),(18,'uk106'),
+(19,'uk103'),(19,'uk104'),(19,'uk105');
+
+/* ******************************************************************************************************************************
+ * Exersize #2 (initial population):
+ * Prepare a SQL script (sequence of SQL statements) to populate the first time all the empty target tables:
+ *   1) dim_technician_group;
+ *   2) bridge_technician_group;
+ *   3) fact_inspection;
+ ****************************************************************************************************************************** */
+
+
+-- *   1) dim_technician_group;
+
+-- First, create a backup of the bridge_technician_group table in case something goes wrong
+CREATE TABLE bridge_technician_group_backup AS SELECT * FROM bridge_technician_group;
+
+-- Next, create a temporary table to hold the distinct group codes from the stg_inspection table
+CREATE TABLE temp_groups AS
+SELECT DISTINCT group_code FROM (
+  SELECT row_number() OVER (PARTITION BY inspection_id ORDER BY employee_bk) AS rn,
+         inspection_id,
+         employee_bk as group_code
+  FROM stg_inspection
+) t
+WHERE rn = 1;
+
+-- Insert the distinct group codes into the dim_technician_group table
+INSERT INTO dim_technician_group (group_code)
+SELECT group_code FROM temp_groups;
+
+-- Get the employee_group_sk values for each group code
+CREATE TABLE temp_group_sk AS
+SELECT t.group_code, g.employee_group_sk
+FROM temp_groups t
+JOIN dim_technician_group g ON t.group_code = g.group_code;
+
+-- Insert the employee_sk and employee_group_sk values into the bridge_technician_group table
+INSERT INTO bridge_technician_group (employee_sk, employee_group_sk)
+SELECT d.employee_sk, g.employee_group_sk
+FROM stg_inspection s
+JOIN dim_technician d ON s.employee_bk = d.employee_bk
+JOIN temp_group_sk g ON s.inspection_id = g.group_code;
+
+-- Drop the temporary tables
+DROP TABLE temp_groups;
+DROP TABLE temp_group_sk;
+
+-- This script performs the following steps:
+-- It creates a backup of the bridge_technician_group table in case something goes wrong during the population process.
+-- It creates a temporary table called temp_groups that holds the distinct group codes from the stg_inspection table.
+-- It inserts the distinct group codes from the temp_groups table into the dim_technician_group table.
+-- It creates a temporary table called temp_group_sk that holds the employee_group_sk values for each group code.
+-- It inserts the employee_sk and employee_group_sk values into the bridge_technician_group table using a JOIN on the employee_bk field 
+-- of the stg_inspection table and the employee_sk field of the dim_technician table, and a JOIN on the inspection_id field of the 
+-- stg_inspection table and the group_code field of the temp_group_sk table. It drops the temporary tables.
+-- This script assumes that the employee_sk field is the primary key of the dim_technician table, and that the employee_bk field is used to uniquely identify each technician. 
+-- It also assumes that the inspection_id field is the primary key of the `st
+
+
+
+ -- *   2) bridge_technician_group;
+ 
+-- First, create a backup of the bridge_technician_group table in case something goes wrong
+CREATE TABLE bridge_technician_group_backup AS SELECT * FROM bridge_technician_group;
+
+-- Next, create a temporary table to hold the distinct group codes from the stg_inspection table
+CREATE TABLE temp_groups AS
+SELECT DISTINCT group_code FROM (
+  SELECT row_number() OVER (PARTITION BY inspection_id ORDER BY employee_bk) AS rn,
+         inspection_id,
+         employee_bk as group_code
+  FROM stg_inspection
+) t
+WHERE rn = 1;
+
+-- Insert the distinct group codes into the dim_technician_group table
+INSERT INTO dim_technician_group (group_code)
+SELECT group_code FROM temp_groups;
+
+-- Get the employee_group_sk values for each group code
+CREATE TABLE temp_group_sk AS
+SELECT t.group_code, g.employee_group_sk
+FROM temp_groups t
+JOIN dim_technician_group g ON t.group_code = g.group_code
+
+
+
+ -- *   3) fact_inspection;
+
+-- First, create a backup of the fact_inspection table in case something goes wrong
+CREATE TABLE fact_inspection_backup AS SELECT * FROM fact_inspection;
+
+-- Next, create a temporary table to hold the distinct group codes from the stg_inspection table
+CREATE TABLE temp_groups AS
+SELECT DISTINCT group_code FROM (
+  SELECT row_number() OVER (PARTITION BY inspection_id ORDER BY employee_bk) AS rn,
+         inspection_id,
+         employee_bk as group_code
+  FROM stg_inspection
+) t
+WHERE rn = 1;
+
+-- Insert the distinct group codes into the dim_technician_group table
+INSERT INTO dim_technician_group (group_code)
+SELECT group_code FROM temp_groups;
+
+-- Get the employee_group_sk values for each group code
+CREATE TABLE temp_group_sk AS
+SELECT t.group_code, g.employee_group_sk
+FROM temp_groups t
+JOIN dim_technician_group g ON t.group_code = g.group_code;
+
+-- Insert the inspection_id and employee_group_sk values into the fact_inspection table
+INSERT INTO fact_inspection (inspection_id, employee_group_sk)
+SELECT inspection_id, t.employee_group_sk
+FROM stg_inspection s
+JOIN temp_group_sk t ON s.employee_bk = t.group_code;
+
+
+
+
+/* ******************************************************************************************************************************
+ * Scenario 3: Multivalued Relationships. Part 2
+ * 
+ * Incremental data processing. After the initial data population the new portion of the source data has been arrived.
+ * The requirements are to incrementally merge this data into the target tables.
+ *     
+ ****************************************************************************************************************************** */
+
+/* ******************************************************************************************************************************
+-- New portion of the source data
+****************************************************************************************************************************** */
+insert into stg_inspection values
+(21,'uk102'),(21,'uk103'),
+(22,'uk107'),(22,'uk106'),(22,'uk105'),
+(23,'uk103'),(23,'uk104'),(23,'uk105'),
+(24,'uk100'),(24,'uk105'),
+(25,'uk100'),(25,'uk103'),(25,'uk111'),
+(26,'uk100'),(26,'uk105'),
+(27,'uk100'),(27,'uk103'),(27,'uk111');
+
+/* ******************************************************************************************************************************
+ * Exersize #3 (incremental processing):
+ * Prepare a SQL script (sequence of SQL statements) to merge the new portion of the data into the target table:
+ *   1) dim_technician_group;
+ *   2) bridge_technician_group;
+ *   3) fact_inspection;
+ ****************************************************************************************************************************** */
+
+-- 1) dim_technician_group;
+
+-- This script first creates a backup of the dim_technician_group table, in case something goes wrong. 
+-- It then inserts the new group codes from the stg_inspection table into the dim_technician_group table, 
+-- only for the inspections with an inspection_id greater than 20. Note that this script does not update 
+-- the fact_inspection table, so you will need to run a separate script to update it with the new group codes.
+
+-- First, create a backup of the dim_technician_group table in case something goes wrong
+CREATE TABLE dim_technician_group_backup AS SELECT * FROM dim_technician_group;
+
+-- Insert the new group codes from the stg_inspection table into the dim_technician_group table
+INSERT INTO dim_technician_group (group_code)
+SELECT DISTINCT group_code FROM (
+  SELECT row_number() OVER (PARTITION BY inspection_id ORDER BY employee_bk) AS rn,
+         inspection_id,
+         employee_bk as group_code
+  FROM stg_inspection
+) t
+WHERE rn = 1 AND inspection_id > 20;
+
+
+
+-- 2) bridge_technician_group;
+
+-- First, create a backup of the bridge_technician_group table in case something goes wrong
+CREATE TABLE bridge_technician_group_backup AS SELECT * FROM bridge_technician_group;
+
+-- Insert the new group codes from the stg_inspection table into the dim_technician_group table
+INSERT INTO dim_technician_group (group_code)
+SELECT DISTINCT group_code FROM (
+  SELECT row_number() OVER (PARTITION BY inspection_id ORDER BY employee_bk) AS rn,
+         inspection_id,
+         employee_bk as group_code
+  FROM stg_inspection
+) t
+WHERE rn = 1 AND inspection_id > 20;
+
+-- Get the employee_group_sk for the new group codes
+INSERT INTO bridge_technician_group (employee_group_sk, employee_sk)
+SELECT t1.employee_group_sk, t2.employee_sk
+FROM (
+  SELECT t.employee_bk, dtg.employee_group_sk
+  FROM dim_technician t
+  JOIN dim_technician_group dtg ON t.employee_bk = dtg.group_code
+) t1
+JOIN dim_technician t2 ON t1.employee_bk = t2.employee_bk;
+
+
+-- 3) fact_inspection;
+
+-- Merge the new data into the fact_inspection table
+insert into fact_inspection(inspection_id, employee_group_sk)
+select i.inspection_id, b.employee_group_sk
+from stg_inspection i
+join bridge_technician_group b on i.employee_bk = d.employee_bk
+where not exists (
+  select 1 from fact_inspection f where f.inspection_id = i.inspection_id
+);
+
+
+-- This script will insert new rows into the fact_inspection table for each row in the stg_inspection table that does not already exist in the fact_inspection table. 
+-- The employee_group_sk value is obtained by joining the stg_inspection table with the bridge_technician_group table on the employee_bk column.
+-- Note that this script assumes that the bridge_technician_group table has already been populated with the appropriate data. 
+-- If it has not been populated yet, you will need to do that first before running this script.
+
+
