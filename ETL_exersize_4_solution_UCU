@@ -78,18 +78,19 @@ values
  * Prepare a SQL script (sequence of SQL statements) to build the bridge_employee_hierachy table according to closure table algorithm
  ****************************************************************************************************************************** */
 
+ --------------Execution--------------
 
-WITH RECURSIVE cte AS (
-  -- Anchor member
-  SELECT e.employee_sk as ancestor_employee_sk, e.employee_sk as descendant_employee_sk, 0 as depth_from_parent, TRUE as is_leave
-  FROM dim_employee e
-  WHERE NOT EXISTS (SELECT 1 FROM stg_employee s WHERE s.parent_bk = e.employee_bk)
-  UNION ALL
-  --recursive member
-  SELECT a.ancestor_employee_sk, b.descendant_employee_sk, a.depth_from_parent + 1, b.is_leave
-  FROM cte a
-  JOIN bridge_employee_hierachy b
-  ON a.descendant_employee_sk = b.ancestor_employee_sk
-)
-INSERT INTO bridge_employee_hierachy (ancestor_employee_sk, descendant_employee_sk, depth_from_parent, is_leave)
-SELECT * FROM cte;
+INSERT INTO bridge_employee_hierachy (ancestor_employee_sk, descendant_employee_sk, depth_from_parent)
+SELECT employee_sk, employee_sk, 0
+FROM dim_employee;
+-- we need to insert a row for each employee into the bridge_employee_hierachy table, with the ancestor_employee_sk and 
+-- descendant_employee_sk columns set to the employee's employee_sk value and the depth_from_parent column set to 0. 
+
+
+-- Next, we need to insert rows for each employee's direct descendants into the bridge_employee_hierachy table.
+INSERT INTO bridge_employee_hierachy (ancestor_employee_sk, descendant_employee_sk, depth_from_parent)
+SELECT a.employee_sk, b.employee_sk, 1
+FROM dim_employee a
+JOIN stg_employee c ON a.employee_bk = c.parent_bk
+JOIN dim_employee b ON c.employee_bk = b.employee_bk
+WHERE c.parent_bk IS NOT NULL;
